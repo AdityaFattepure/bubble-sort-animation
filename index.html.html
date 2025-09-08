@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bubble Sort Visualization</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .visualization-area {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            height: 400px;
+            margin: 40px 0;
+            position: relative;
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .bar {
+            width: 80px;
+            margin: 0 10px;
+            background: linear-gradient(180deg, #4a90e2 0%, #357abd 100%);
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            position: relative;
+            transition: all 0.5s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .bar.comparing {
+            background: linear-gradient(180deg, #ffd700 0%, #ffb347 100%);
+            transform: scale(1.05);
+            box-shadow: 0 8px 16px rgba(255, 215, 0, 0.4);
+        }
+
+        .bar.swapping {
+            background: linear-gradient(180deg, #ff6b6b 0%, #ee5a24 100%);
+            animation: pulse 0.5s ease;
+        }
+
+        .bar.sorted {
+            background: linear-gradient(180deg, #27ae60 0%, #229954 100%);
+            box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .bar-value {
+            color: white;
+            font-weight: bold;
+            font-size: 24px;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .bar-label {
+            position: absolute;
+            bottom: -30px;
+            font-size: 18px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        button {
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .start-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .reset-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(240, 147, 251, 0.4);
+        }
+
+        .reset-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(240, 147, 251, 0.5);
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: #f8f9fa;
+            padding: 10px 20px;
+            border-radius: 50px;
+        }
+
+        .speed-control label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .speed-control input[type="range"] {
+            width: 150px;
+        }
+
+        .info {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 18px;
+            color: #666;
+            min-height: 30px;
+        }
+
+        .info.highlight {
+            color: #667eea;
+            font-weight: 600;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bubble Sort Visualization</h1>
+        
+        <div class="visualization-area" id="visualization">
+            <!-- Bars will be dynamically created here -->
+        </div>
+        
+        <div class="info" id="info">Click "Start Sort" to begin the animation</div>
+        
+        <div class="controls">
+            <button class="start-btn" id="startBtn" onclick="startSort()">Start Sort</button>
+            <button class="reset-btn" onclick="resetArray()">Reset</button>
+            <div class="speed-control">
+                <label for="speed">Speed:</label>
+                <input type="range" id="speed" min="100" max="2000" value="800" step="100">
+                <span id="speedValue">800ms</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let array = [5, 3, 8, 4, 2, 7];
+        let animationSpeed = 800;
+        let isAnimating = false;
+
+        // Initialize visualization
+        function initVisualization() {
+            const container = document.getElementById('visualization');
+            container.innerHTML = '';
+            
+            array.forEach((value, index) => {
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                bar.id = `bar-${index}`;
+                bar.style.height = `${value * 40}px`;
+                
+                const barValue = document.createElement('div');
+                barValue.className = 'bar-value';
+                barValue.textContent = value;
+                
+                const barLabel = document.createElement('div');
+                barLabel.className = 'bar-label';
+                barLabel.textContent = value;
+                
+                bar.appendChild(barValue);
+                bar.appendChild(barLabel);
+                container.appendChild(bar);
+            });
+        }
+
+        // Update bar heights and values
+        function updateBars() {
+            array.forEach((value, index) => {
+                const bar = document.getElementById(`bar-${index}`);
+                bar.style.height = `${value * 40}px`;
+                bar.querySelector('.bar-value').textContent = value;
+                bar.querySelector('.bar-label').textContent = value;
+            });
+        }
+
+        // Highlight bars being compared
+        function highlightBars(indices, className) {
+            // Remove all highlights first
+            document.querySelectorAll('.bar').forEach(bar => {
+                if (!bar.classList.contains('sorted')) {
+                    bar.classList.remove('comparing', 'swapping');
+                }
+            });
+            
+            // Add new highlights
+            indices.forEach(index => {
+                const bar = document.getElementById(`bar-${index}`);
+                if (!bar.classList.contains('sorted')) {
+                    bar.classList.add(className);
+                }
+            });
+        }
+
+        // Mark bar as sorted
+        function markSorted(index) {
+            const bar = document.getElementById(`bar-${index}`);
+            bar.classList.add('sorted');
+            bar.classList.remove('comparing', 'swapping');
+        }
+
+        // Update info text
+        function updateInfo(text, highlight = false) {
+            const info = document.getElementById('info');
+            info.textContent = text;
+            info.className = highlight ? 'info highlight' : 'info';
+        }
+
+        // Sleep function for delays
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Animate swap
+        async function animateSwap(i, j) {
+            const bar1 = document.getElementById(`bar-${i}`);
+            const bar2 = document.getElementById(`bar-${j}`);
+            
+            // Highlight as swapping
+            highlightBars([i, j], 'swapping');
+            updateInfo(`Swapping ${array[i]} and ${array[j]}`);
+            
+            // Get positions
+            const bar1Rect = bar1.getBoundingClientRect();
+            const bar2Rect = bar2.getBoundingClientRect();
+            const distance = bar2Rect.left - bar1Rect.left;
+            
+            // Animate the swap
+            bar1.style.transform = `translateX(${distance}px)`;
+            bar2.style.transform = `translateX(${-distance}px)`;
+            
+            await sleep(animationSpeed);
+            
+            // Swap in array
+            [array[i], array[j]] = [array[j], array[i]];
+            
+            // Reset transforms and update
+            bar1.style.transform = '';
+            bar2.style.transform = '';
+            updateBars();
+            
+            await sleep(animationSpeed / 2);
+        }
+
+        // Bubble Sort animation
+        async function bubbleSort() {
+            const n = array.length;
+            
+            for (let i = 0; i < n - 1; i++) {
+                let swapped = false;
+                updateInfo(`Pass ${i + 1} of ${n - 1}`);
+                await sleep(animationSpeed / 2);
+                
+                for (let j = 0; j < n - i - 1; j++) {
+                    // Highlight comparison
+                    highlightBars([j, j + 1], 'comparing');
+                    updateInfo(`Comparing ${array[j]} and ${array[j + 1]}`);
+                    await sleep(animationSpeed);
+                    
+                    if (array[j] > array[j + 1]) {
+                        await animateSwap(j, j + 1);
+                        swapped = true;
+                    } else {
+                        updateInfo(`${array[j]} ≤ ${array[j + 1]} - No swap needed`);
+                        await sleep(animationSpeed / 2);
+                    }
+                    
+                    // Clear highlights
+                    highlightBars([], '');
+                }
+                
+                // Mark the last unsorted element as sorted
+                markSorted(n - i - 1);
+                updateInfo(`${array[n - i - 1]} is now in its correct position`, true);
+                await sleep(animationSpeed);
+                
+                if (!swapped) {
+                    // Array is already sorted
+                    for (let k = 0; k < n - i - 1; k++) {
+                        markSorted(k);
+                    }
+                    break;
+                }
+            }
+            
+            // Mark the first element as sorted
+            markSorted(0);
+            updateInfo('✨ Array is now sorted! ✨', true);
+        }
+
+        // Start sorting
+        async function startSort() {
+            if (isAnimating) return;
+            
+            isAnimating = true;
+            document.getElementById('startBtn').disabled = true;
+            
+            await bubbleSort();
+            
+            isAnimating = false;
+            document.getElementById('startBtn').disabled = false;
+        }
+
+        // Reset array
+        function resetArray() {
+            if (isAnimating) return;
+            
+            array = [5, 3, 8, 4, 2, 7];
+            initVisualization();
+            updateInfo('Click "Start Sort" to begin the animation');
+        }
+
+        // Speed control
+        document.getElementById('speed').addEventListener('input', (e) => {
+            animationSpeed = parseInt(e.target.value);
+            document.getElementById('speedValue').textContent = `${animationSpeed}ms`;
+        });
+
+        // Initialize on load
+        initVisualization();
+    </script>
+</body>
+</html>
